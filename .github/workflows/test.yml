@@ -1,0 +1,30 @@
+# 템플릿 자체 시험 — claude-ops sync/check/init 과 pre/postflight · run-quiet · ci 부품을 임시 저장소에서 돌린다.
+name: test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [18, 20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      # postflight 판정은 awk 종류(mawk/gawk)에 따라 갈린 이력이 있다 — 러너의 awk 를 기록에 남긴다(로컬 검증 환경은 mawk).
+      - name: awk 종류
+        run: readlink -f "$(command -v awk)"
+      - name: 시험
+        run: node test/run.js

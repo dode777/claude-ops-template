@@ -1,0 +1,86 @@
+# ci/ci.example.yml — 「같은 내용은 전체 테스트를 한 번만」 CI 의 일반화 예시. 소비자의 .github/workflows/ 로 복사해
+# <…> 자리를 채워 쓴다(관리 파일이 아니다 — 각 서비스가 자기 CI 를 소유한다).
+#
+# 흐름: mark(내용 지문 → 통과 기록 아티팩트가 있으면 건너뜀) → test(묶음 동시 실행) → record(통과 기록 남김)
+#
+#   · 통과 기록은 **저장소 단위로 보이는 아티팩트** `tests-passed-<지문>` 이다. actions/cache 는 PR 에서 만든 것을
+#     main 이 읽지 못해(브랜치 범위) 쓰지 않는다.
+#   · pull_request 는 PR 머지 커밋(refs/pull/N/merge)을 시험하므로, 그 뒤 main 이 움직이지 않았으면 머지 결과와
+#     지문이 같다 → 머지 뒤 main push · 릴리즈(workflow_call)는 0분. main 이 움직였으면 다시 돈다(맞는 동작).
+#   · 같은 PR 에 다시 푸시하면 이전 실행을 취소한다(concurrency). main push · 릴리즈 호출은 취소하지 않는다.
+#   · 하지 않는 것: 「바뀐 곳만」 시험해 게시하기. 게시는 늘 그 내용 그대로의 전체 통과가 있어야 한다.
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths-ignore: ['docs/**', '**/*.md', '.claude/**']
+  push:
+    branches: [main]
+    paths-ignore: ['docs/**', '**/*.md', '.claude/**']
+  workflow_call: {}
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  mark:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read    # 통과 기록 아티팩트 목록을 읽는다
+    outputs:
+      hash: ${{ steps.mark.outputs.hash }}
+      passed: ${{ steps.mark.outputs.passed }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: 내용 지문 · 통과 기록 확인
+        id: mark
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # <테스트가 실제로 읽는 문서가 있으면 --include 로 되살린다>
+          H=$(bash ci/fingerprint.sh --exclude docs --exclude '*.md' --exclude .claude)
+          echo "hash=$H" >> "$GITHUB_OUTPUT"
+          N=$(gh api "repos/${{ github.repository }}/actions/artifacts?name=tests-passed-$H&per_page=5" \
+                --jq '[.artifacts[] | select(.expired == false)] | length' 2>/dev/null || echo 0)
+          if [ "${N:-0}" -gt 0 ]; then
+            echo "passed=true" >> "$GITHUB_OUTPUT"
+            echo "이 내용(지문 \`$H\`)은 이미 전체 테스트를 통과했다 — 건너뜀" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "passed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  test:
+    needs: mark
+    if: needs.mark.outputs.passed != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]   # ci/shards.json 의 groups 수와 같게
+    name: test (${{ matrix.shard }}/3)
+    steps:
+      - uses: actions/checkout@v4
+      # <언어 런타임 · 의존성 설치 · 화면(xvfb) 등 준비>
+      - name: 테스트 (${{ matrix.shard }}/3 묶음)
+        run: node ci/run-shards.js --config ci/shards.json --shard ${{ matrix.shard }}/3
+
+  record:
+    needs: [mark, test]
+    if: needs.mark.outputs.passed != 'true' && needs.test.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: 통과 기록 남기기
+        run: echo "${{ needs.mark.outputs.hash }} ${{ github.sha }}" > tests-passed.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tests-passed-${{ needs.mark.outputs.hash }}
+          path: tests-passed.txt
+          retention-days: 90

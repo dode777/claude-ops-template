@@ -1,0 +1,17 @@
+{
+  "_설명": "claude-ops 템플릿 목록. payloadDir 아래 파일은 소비자 저장소의 같은 경로로 들어간다(관리 파일 — ops.lock 으로 고정). 허용 구역·금지 경로는 이 파일이 아니라 claude-ops.js 안에 고정돼 있다(받아 온 템플릿이 넓힐 수 없게). init.files 는 `claude-ops init` 이 한 번만 만드는 오버레이 빈 틀이다 — 이미 있으면 건드리지 않고, 그 뒤로는 소비자 소유다.",
+  "name": "claude-ops",
+  "schema": 1,
+  "payloadDir": "payload",
+  "init": {
+    "files": {
+      "init/project.env": ".claude/project.env",
+      "init/settings.overlay.json": ".claude/settings.overlay.json",
+      "init/CLAUDE.md": "CLAUDE.md",
+      "init/orchestrator.local.md": ".claude/orchestrator.local.md",
+      "init/reports.gitkeep": ".claude/reports/.gitkeep",
+      "init/.github/workflows/claude-ops-check.yml": ".github/workflows/claude-ops-check.yml",
+      "init/.github/workflows/claude-ops-sync.yml": ".github/workflows/claude-ops-sync.yml"
+    }
+  }
+}
