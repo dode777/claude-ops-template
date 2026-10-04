@@ -4,6 +4,8 @@
 
 ## 1.0.0 — 첫 판
 
+- 태그는 `.github/workflows/tag-release.yml` 이 붙인다 — VERSION 을 올린 PR 이 main 에 머지되면 `v<버전>` 태그·릴리즈가 생긴다(이미 있으면 건너뜀). 이 판(1.0.0)은 워크플로를 수동 실행해 붙인다.
+
 여러 에이전트를 무인으로 돌려 실제 서비스를 만든 저장소의 규약·도구를, 서비스 이름 없이 공통부로 옮겼다.
 
 - **`claude-ops` CLI**(의존성 없는 Node) — `init` · `sync`(템플릿을 git 으로 받아 payload 를 쓰고 `.claude/ops.lock` 갱신,
