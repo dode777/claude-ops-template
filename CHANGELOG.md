@@ -2,6 +2,16 @@
 
 형식: 버전마다 「무엇이 바뀌었나 / 소비자가 할 일」. 버전 규칙은 `docs/DESIGN.md` 5절.
 
+## 1.0.1 — 동기화 워크플로의 기본을 수동 실행으로
+
+- `init/.github/workflows/claude-ops-sync.yml` — 주 1회 `schedule:` 을 빼고 **수동 실행(workflow_dispatch)만**을 기본으로 했다.
+  주기 실행은 머리말의 예시를 `on:` 에 더하는 선택이다. 이유: 템플릿은 자주 바뀌지 않고, 실제 수정이 있을 때 받으면 된다는
+  소비자 판단이 있었다 — 주기 실행은 바뀐 것이 없어도 매주 Actions 를 돌린다.
+- 문서(README · `docs/ADOPT.md` 8절 · `docs/DESIGN.md` · `ops-orchestrator` skill 의 「템플릿과 오버레이」)를 같은 기준으로 고쳤다.
+- `docs/ADOPT.md` 부록 B — 모든 저장소가 템플릿으로 옮긴 뒤 옛 복사본을 정리하는 법(지울 것 · 위임으로 남길 것 · 안내판으로 남길 것).
+- 소비자가 할 일: **없다**(관리 파일은 skill 문구 하나만 바뀐다 — `sync --ref v1.0.1`). 이미 만든 `claude-ops-sync.yml` 은 소비자 소유라
+  sync 가 바꾸지 않는다 — 주기 실행을 끄고 싶으면 그 파일의 `schedule:` 을 직접 지운다.
+
 ## 1.0.0 — 첫 판
 
 - 태그는 `.github/workflows/tag-release.yml` 이 붙인다 — VERSION 을 올린 PR 이 main 에 머지되면 `v<버전>` 태그·릴리즈가 생긴다(이미 있으면 건너뜀). 이 판(1.0.0)은 워크플로를 수동 실행해 붙인다.

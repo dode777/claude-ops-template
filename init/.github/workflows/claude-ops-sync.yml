@@ -1,6 +1,10 @@
-# claude-ops 자동 동기화 — 템플릿의 최신 태그를 받아 바뀌었으면 PR 을 연다(Dependabot 과 같은 모양).
+# claude-ops 동기화 — 템플릿의 최신 태그를 받아 바뀌었으면 PR 을 연다(Dependabot 과 같은 모양).
 #
-# 주 1회 + 수동 실행. PR 의 CI(claude-ops check · 이 저장소의 CI)가 검증하고, 머지는 사람이 한다.
+# 기본은 **수동 실행만**(Actions → 「claude-ops sync」 → Run workflow) — 템플릿에 새 태그가 나와 받고 싶을 때 돌린다.
+# 주기 실행은 선택이다: 템플릿이 자주 바뀌고 놓치지 않고 받고 싶으면 아래 on: 에
+#   schedule:
+#     - cron: '23 1 * * 1'   # 매주 월요일 01:23 UTC
+# 를 더한다(바뀐 것이 없으면 PR 을 만들지 않는다). PR 의 CI(claude-ops check · 이 저장소의 CI)가 검증하고, 머지는 사람이 한다.
 #
 # 템플릿 접근: 공개 저장소면 토큰 없이 익명으로 받는다. 비공개로 바뀌면 저장소 시크릿 CLAUDE_OPS_TOKEN
 # (템플릿 읽기 권한)을 넣는다 — 있으면 쓰고 없어도 동작한다.
@@ -16,8 +20,6 @@
 name: claude-ops sync
 
 on:
-  schedule:
-    - cron: '23 1 * * 1'   # 매주 월요일 01:23 UTC
   workflow_dispatch:
     inputs:
       ref:
