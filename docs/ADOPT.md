@@ -66,7 +66,7 @@ node /tmp/claude-ops-template/bin/claude-ops.js init --source "$TEMPLATE_URL" --
 | `.claude/settings.json` | 생성물(base + overlay) | 직접 고치지 않는다 |
 | `.claude/ops.lock` | 템플릿 버전·파일 지문 | 손으로 고치지 않는다 |
 | `CLAUDE.md` · `.claude/project.env` · `.claude/settings.overlay.json` · `.claude/orchestrator.local.md` | 오버레이(이 서비스의 지식·값) | 이 저장소 |
-| `.github/workflows/claude-ops-check.yml` · `claude-ops-sync.yml` | 검사·자동 동기화 | 이 저장소 |
+| `.github/workflows/claude-ops-check.yml` · `claude-ops-sync.yml` | 검사·동기화(수동 실행) | 이 저장소 |
 
 이미 있던 `CLAUDE.md` 등 오버레이는 **덮지 않는다**("둠" 으로 표시된다).
 
@@ -126,22 +126,26 @@ PR 을 만들고, CI 가 초록이면 머지한다. 머지 뒤 처음 시작하�
 ## 7. 저장소 설정 (한 번)
 
 GitHub 저장소 → **Settings → Actions → General → Workflow permissions** 에서
-「**Allow GitHub Actions to create and approve pull requests**」 를 켠다 — 자동 동기화 PR 을 만들려면 필요하다.
+「**Allow GitHub Actions to create and approve pull requests**」 를 켠다 — 동기화 워크플로가 PR 을 만들려면 필요하다.
 
 선택: **Settings → Secrets and variables → Actions** 에 `CLAUDE_OPS_TOKEN` 을 넣으면
-(이 저장소의 contents·pull-requests 쓰기 권한이 있는 토큰) 자동 동기화 PR 에서도 CI 가 바로 돈다.
+(이 저장소의 contents·pull-requests 쓰기 권한이 있는 토큰) 동기화 PR 에서도 CI 가 바로 돈다.
 없으면 PR 은 만들어지지만 CI 는 PR 을 닫았다 다시 열어야 돈다(GitHub 규칙 — GITHUB_TOKEN 으로 만든 PR 은 다른 워크플로를 깨우지 않는다).
 템플릿이 공개 저장소면 템플릿을 받는 데에는 토큰이 필요 없다.
 
 ## 8. 그다음 — 템플릿이 바뀌면
 
-- **자동**: 매주 월요일 `claude-ops sync` 워크플로가 최신 태그를 받아 바뀌었으면 PR 을 연다. 검토하고 머지한다.
-- **바로 받고 싶으면**: GitHub → Actions → 「claude-ops sync」 → Run workflow. 또는 터미널에서:
+- **기본(수동)**: 템플릿에 새 태그가 나와 받고 싶을 때 GitHub → Actions → 「claude-ops sync」 → Run workflow.
+  최신 태그를 받아 바뀌었으면 PR 을 연다. 검토하고 머지한다. 또는 터미널에서:
 
   ```bash
   node .claude/ops/bin/claude-ops.js sync --ref latest
   git add -A && git commit -m "claude-ops 템플릿 동기화" && git push
   ```
+
+- **선택(주기)**: 놓치지 않고 받고 싶으면 `claude-ops-sync.yml` 의 `on:` 에 `schedule:` 을 더한다(파일 머리말에 예시).
+  바뀐 것이 없으면 PR 을 만들지 않으므로 비용은 주기마다 짧은 실행 한 번이다. 템플릿을 같이 쓰는 저장소가 여럿이면
+  한 저장소만 주기로 두지 말고 **함께** 맞춘다 — 각자의 `ops.lock` 버전이 같아야 규약이 같다.
 
 ## 9. 막혔을 때
 
@@ -173,4 +177,14 @@ Claude Code 세션에 아래를 붙이면 1~6번을 대신한다(머지는 사�
   — 옛 지문 대조가 두 저장소의 같은 내용을 전제로 하기 때문이다. 새 preflight/postflight 는 옛 지문 검사 스크립트가 있으면 그것도 함께 돌린다.
 - CLAUDE.md 의 실행 경로만 새 경로(`.claude/ops/bin/…`)로 바꾸고, 옛 경로는 그대로 둔다(진행 중인 세션이 쓴다).
 - 훅이 가리키던 옛 경로(`.claude/bin/usage-guard.py` 등)는 새 파일로 넘기는 **위임 스크립트**로 남긴다(이미 떠 있는 세션이 그 경로를 부른다).
-- 모든 저장소가 옮긴 뒤 한 번에 지운다.
+- 모든 저장소가 옮긴 뒤 **한 번에** 정리한다(저장소마다 브랜치 하나씩, 머지는 가까운 시점에 — 한쪽만 머지된 사이에 남은 쪽의 옛 대조는
+  「상대와 다름」 **경고**를 내지만 막지는 않는다):
+  - 지운다 — 지문 검사 스크립트와 지문 lock, 옛 브리프·보고서 틀(`.claude/templates/*`), project.env 의 상대 저장소 경로 변수.
+    지문 검사 스크립트가 없어지면 새 preflight/postflight 의 옛 지문 대조도 저절로 멈춘다(파일이 있을 때만 돈다).
+  - **위임으로 남긴다** — 옛 `.claude/bin/preflight.sh`·`postflight.sh` 는 새 경로로 `exec` 하는 몇 줄짜리 스크립트로
+    (외워 둔 명령·옛 브리프·이미 떠 있는 지휘 세션이 그 경로를 부른다). 훅이 가리키던 옛 경로의 위임 스크립트도 그대로 둔다.
+  - **안내판으로 남긴다** — 옛 `.claude/CONVENTIONS.md` 는 소스 주석이 `CONVENTIONS.md L2-n` 처럼 가리키고 있을 수 있다.
+    본문을 지우고 새 위치 대응표(L1·L2 → `.claude/ops/docs/CONVENTIONS.md`, L3 → `ops-orchestrator` skill, 번호 그대로)와
+    옛 본문을 볼 수 있는 `git show <커밋>:.claude/CONVENTIONS.md` 한 줄만 둔다. 옛 본문의 서비스 고유 사례 중 지휘자에게 필요한 것은
+    `.claude/orchestrator.local.md` 로 옮긴다.
+  - CLAUDE.md 의 「규약 복사본 · 정본은 어느 저장소 · 지문으로 대조」 설명을 「각자 템플릿을 받는다 — `ops.lock` 의 버전으로 대조」 로 고친다.

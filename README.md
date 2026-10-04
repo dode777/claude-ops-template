@@ -19,7 +19,7 @@
 
 클라우드 세션은 저장소의 플러그인·마켓플레이스 설정을 **설치하지 않는다**. 저장소에 **커밋된** `CLAUDE.md` ·
 `.claude/{agents,skills,rules}` · 훅만 로드된다. 그래서 파일은 각 서비스 저장소에 실제로 들어가야 하고,
-「복사하면 각자 고치기 시작한다」 는 문제는 lock + 검사 + 자동 동기화 PR 로 푼다(Dependabot 과 같은 모양).
+「복사하면 각자 고치기 시작한다」 는 문제는 lock + 검사 + 동기화 PR 로 푼다(Dependabot 과 같은 모양).
 비교표: [`docs/DESIGN.md`](docs/DESIGN.md).
 
 ```
@@ -34,7 +34,7 @@
  ├─ docs/  설계 · 도입 절차                        ├─ CLAUDE.md (서비스 지식)        ┘
  └─ test/  자체 시험                               ├─ .claude/ops.lock               출처·커밋·파일별 sha256
                                                   └─ .github/workflows/claude-ops-{check,sync}.yml
-                                                       check: PR 마다 lock 대조 · sync: 주 1회 최신 태그 → PR
+                                                       check: PR 마다 lock 대조 · sync: 수동 실행(주기는 선택) → PR
 ```
 
 ## 설치 (새 서비스)
@@ -50,7 +50,7 @@ node /tmp/claude-ops-template/bin/claude-ops.js init --source "$TEMPLATE_URL" --
 
 ## 업데이트
 
-- 서비스 쪽: 주 1회 자동 PR(`claude-ops-sync.yml`), 또는 `node .claude/ops/bin/claude-ops.js sync --ref latest`.
+- 서비스 쪽: Actions 에서 `claude-ops-sync.yml` 을 수동 실행(바뀌었으면 PR — 주기 실행은 선택), 또는 `node .claude/ops/bin/claude-ops.js sync --ref latest`.
 - 템플릿 쪽: 고치고 → `VERSION` · `CHANGELOG.md` → PR(`test` 워크플로 초록) → merge 커밋으로 머지 → main 에 태그 `vX.Y.Z`.
 
 ## 소비자에서 급하게 고쳐야 할 때

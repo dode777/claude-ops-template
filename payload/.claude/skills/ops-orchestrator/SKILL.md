@@ -306,8 +306,8 @@ python3 .claude/ops/bin/tokens.py --by-agent            # 로컬 JSONL 모델·�
 **템플릿 저장소가 정본**이고, 각 서비스는 버전을 고정해 받는다(`.claude/ops.lock`).
 
 - 공통부를 고칠 일이 생기면 **템플릿에서** 고치고 버전을 올린다(`VERSION` · `CHANGELOG.md`, 태그 `vX.Y.Z`).
-  서비스들은 주 1회 자동 동기화 PR(`.github/workflows/claude-ops-sync.yml`)로 받는다. 급하면 수동 실행하거나
-  `node .claude/ops/bin/claude-ops.js sync --ref vX.Y.Z`.
+  서비스들은 동기화 워크플로(`.github/workflows/claude-ops-sync.yml` — 기본은 수동 실행, 주기는 선택)를 돌리거나
+  `node .claude/ops/bin/claude-ops.js sync --ref vX.Y.Z` 로 받는다. 템플릿을 같이 쓰는 서비스는 **함께** 올린다.
 - 서비스에서 관리 파일을 직접 고치면 `claude-ops check`(postflight · CI)가 실패한다. 급한 탈출구는
   `ops.lock` 의 `overrides`(사유 필수 — check 가 경고로 계속 알린다). **같은 변경을 템플릿에 올리고 override 를
   지우는 것까지가 한 일이다.**
