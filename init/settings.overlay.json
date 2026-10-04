@@ -1,0 +1,3 @@
+{
+  "_설명": "이 저장소만의 Claude Code 설정(오버레이). claude-ops 가 .claude/ops/settings.base.json 과 병합해 .claude/settings.json 을 만든다 — settings.json 을 직접 고치지 말고 여기를 고친 뒤 `node .claude/ops/bin/claude-ops.js settings`. 예: 큰 생성물·데이터 파일 읽기 차단 {\"permissions\": {\"deny\": [\"Read(./data/huge.json)\"]}} — 이 규칙은 그 경로를 인자로 쓴 셸 명령도 막는다."
+}

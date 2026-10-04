@@ -1,0 +1,43 @@
+# claude-ops 관리 파일 검사 — 소비자에서 관리 파일을 직접 고치면 실패한다.
+#
+# 관리 파일(.claude/ops/** · .claude/agents/ops-* · .claude/skills/ops-* · 생성물 .claude/settings.json)의
+# 정본은 템플릿이다. 고칠 것은 템플릿에서 고치고 `claude-ops sync` 로 받는다.
+# postflight 도 같은 검사를 하지만, 에이전트가 아닌 사람의 커밋·node 가 없는 환경은 여기서 잡는다.
+#
+# 이 파일은 `claude-ops init` 이 한 번 만든 오버레이다(템플릿 sync 가 덮지 않는다 — GITHUB_TOKEN 으로는
+# 워크플로 파일을 고치는 PR 을 만들 수 없어서 payload 에 넣지 않았다). 템플릿의 init/ 판이 바뀌면 손으로 옮긴다.
+name: claude-ops check
+
+on:
+  pull_request:
+    paths: ['.claude/**', '.github/workflows/claude-ops-*.yml']
+  push:
+    branches: [main]
+    paths: ['.claude/**']
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # 게이트 — lock 과 대조(오프라인·결정적)
+      - name: 관리 파일이 lock 과 같은가
+        run: node .claude/ops/bin/claude-ops.js check
+
+      # 보조 — lock 자체를 손으로 고쳤는지 템플릿 원본(잠근 커밋)과 대조한다. 네트워크·템플릿 쪽 사정
+      # (그 커밋이 지워짐 등)으로 실패할 수 있어 막지 않는다 — 노란 표시가 뜨면 확인한다.
+      - name: lock 이 템플릿 원본과 같은가 (--deep, 막지 않음)
+        continue-on-error: true
+        env:
+          CLAUDE_OPS_TOKEN: ${{ secrets.CLAUDE_OPS_TOKEN }}
+        run: node .claude/ops/bin/claude-ops.js check --deep

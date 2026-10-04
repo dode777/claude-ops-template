@@ -1,0 +1,12 @@
+{
+  "_설명": "ci/run-shards.js 설정 예시. groups 의 값은 명령별 예상 초 — CI 요약 표의 실측으로 채운다. 여기 없는 새 명령은 가장 가벼운 묶음에 자동 배정된다.",
+  "fromPackageJson": ["test", "test:e2e"],
+  "wrap": { "test": "xvfb-run -a -s \"-screen 0 1280x720x24\"" },
+  "idPattern": "(scripts/[\\w./-]+\\.(?:js|py))",
+  "defaultSeconds": 30,
+  "groups": [
+    { "scripts/test-ui.js": 300, "scripts/test-unit.js": 10 },
+    { "scripts/test-wrap.js": 390 },
+    { "scripts/test-e2e-a.js": 150, "scripts/test-e2e-b.js": 120 }
+  ]
+}

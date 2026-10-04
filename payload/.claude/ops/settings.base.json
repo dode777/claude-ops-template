@@ -1,0 +1,30 @@
+{
+  "_설명": "claude-ops 공통 설정(관리 파일). 소비자의 .claude/settings.json 은 이것 + .claude/settings.overlay.json 을 claude-ops 가 병합한 생성물이다. 객체는 키별 병합, 배열은 이어 붙이고 중복 제거, 스칼라는 overlay 우선. `_` 로 시작하는 최상위 키는 결과에 넣지 않는다.",
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/ops/bin/usage-guard.py\" SessionStart --force",
+            "timeout": 30,
+            "statusMessage": "사용량 한도 확인"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/ops/bin/usage-guard.py\" SubagentStop",
+            "timeout": 30,
+            "statusMessage": "사용량 한도 확인"
+          }
+        ]
+      }
+    ]
+  }
+}
