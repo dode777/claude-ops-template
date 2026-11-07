@@ -2,6 +2,13 @@
 
 형식: 버전마다 「무엇이 바뀌었나 / 소비자가 할 일」. 버전 규칙은 `docs/DESIGN.md` 5절.
 
+## 1.0.2 — 사용량 조회가 막혔을 때의 판단
+
+- `usage-guard.py` — 사용량 엔드포인트가 오류(예: 클라우드 세션 토큰의 `permission_error` 403)를 돌려주면 「응답 형식 불일치」 대신
+  「API 거부 — <오류 종류>」 로 알린다. 조회가 안 될 때의 안내를 「동시 1개」 에서 바꿨다: 클라우드 세션은 `get_session` 의
+  `rate_limit_info`(status allowed / allowed_warning / rejected, rateLimitType, resetsAt)로 판단하고, 5시간 창이 없는 요금제면 주간 창만 본다.
+- 소비자가 할 일: `sync` 로 받는다. 지휘 메모에 사용량 판단 규칙을 두었다면 같은 기준으로 맞춘다.
+
 ## 1.0.1 — 동기화 워크플로의 기본을 수동 실행으로
 
 - `init/.github/workflows/claude-ops-sync.yml` — 주 1회 `schedule:` 을 빼고 **수동 실행(workflow_dispatch)만**을 기본으로 했다.

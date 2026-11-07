@@ -59,6 +59,10 @@ def fetch(force):
              '-H', 'Content-Type: application/json'],
             capture_output=True, text=True, timeout=TIMEOUT + 5)
         data = json.loads(out.stdout)
+        if isinstance(data, dict) and data.get('type') == 'error':
+            # 2026-11 실측: 클라우드 세션 토큰이 이 엔드포인트에 permission_error(403)를 받는다.
+            err = (data.get('error') or {}).get('type') or 'error'
+            return None, f'API 거부 — {err}'
         if not isinstance(data, dict) or ('limits' not in data and 'five_hour' not in data):
             return None, '응답 형식 불일치'
         CACHE.write_text(json.dumps(data))
@@ -112,8 +116,13 @@ def main():
         # 조회 실패는 조용히 넘긴다. 판단 근거가 없다는 사실만 알린다.
         emit({'suppressOutput': True, 'hookSpecificOutput': {
             'hookEventName': event,
-            'additionalContext': f'[사용량] 조회 불가({src}) — 한도 수치 없이 진행. '
-                                 '보수적으로 동시 에이전트 1개로 제한하고, 429가 나면 즉시 중지·재예약할 것.'}})
+            'additionalContext': f'[사용량] 조회 불가({src}) — 퍼센트 없이 판단한다. '
+                                 '클라우드 세션이면 get_session(세션 id 생략)의 external_metadata.rate_limit_info '
+                                 '(status allowed / allowed_warning / rejected, rateLimitType, resetsAt)를 본다 — '
+                                 'allowed 면 동시 에이전트 최대 2개, allowed_warning 이면 신규 에이전트 중지, '
+                                 'rejected·429 면 즉시 중지하고 resetsAt 뒤로 재개 예약. '
+                                 'rateLimitType 에 five_hour 가 없으면 5시간 창이 없는 요금제다(주간 창만 본다). '
+                                 '사용자가 정한 주간 상한(%)이 있으면 사용자에게 앱의 사용량 값을 물어 맞춘다.'}})
 
     rows = windows(data)
     if not rows:
