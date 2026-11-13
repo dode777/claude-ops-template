@@ -92,6 +92,10 @@ node /tmp/claude-ops-template/bin/claude-ops.js init --source "$TEMPLATE_URL" --
    - 작업 에이전트: `.claude/ops/docs/CONVENTIONS.md`(L1·L2). 보고서 틀 `.claude/ops/templates/report.md`.
    - **세션을 지휘한다면**(에이전트를 띄운다면) 먼저 `.claude/skills/ops-orchestrator/SKILL.md` 와
      `.claude/orchestrator.local.md` 를 읽는다(사람은 `/ops-orchestrator`).
+   - **한국어가 들어가는 모든 것**(화면 문구·문서·주석·커밋 메시지·PR 본문·보고서)은 세 라이브러리를 반드시 거친다 —
+     쓰는 동안 `fluent-korean`, 쓴 뒤 `korean`(윤문) → `humanize-korean`(im-not-ai, 마지막 점검). 뜻·수치·식별자는 바꾸지
+     않는다. 자세한 규칙은 CONVENTIONS.md 의 「한국어 산출물」. 이 저장소에 놓인 경로:
+     `<fluent-korean 기준 파일>` · `<korean skill>` · `<humanize-korean skill>`
    ````
 
    CLAUDE.md 는 **모든 에이전트에 자동으로 들어간다** — 「빼면 에이전트가 실수하는가」 로 거른 서비스 불변식만 남긴다.
@@ -102,6 +106,38 @@ node /tmp/claude-ops-template/bin/claude-ops.js init --source "$TEMPLATE_URL" --
    ```
 
 4. **`.claude/orchestrator.local.md`** — 지휘자만 알면 되는 서비스 사정(브랜치 계열 관계 등). 없으면 비워 둔다.
+5. **한국어 라이브러리 셋** — 규약의 「한국어 산출물」 이 요구한다. 한국어가 들어가는 모든 것(화면 문구·문서·주석·
+   커밋 메시지·PR 본문·보고서)은 이 셋을 거쳐야 한다. 템플릿은 이 셋을 싣지 않는다(남의 저장소이고, 이름이 `ops-` 로
+   시작하지 않아 오버레이다 — sync 가 건드리지 않는다). 클라우드 세션은 플러그인을 설치하지 않으므로 **저장소에 커밋된
+   파일**로 넣는다.
+
+   | 라이브러리 | 역할 | 저장소에 놓는 곳 |
+   |---|---|---|
+   | [snflkd/fluent-korean](https://github.com/snflkd/fluent-korean) | 쓰는 기준(output style) | `.claude/output-styles/` |
+   | [airoasting/korean](https://github.com/airoasting/korean) | 윤문(skill) | `.claude/skills/korean/` |
+   | [epoko77-ai/im-not-ai](https://github.com/epoko77-ai/im-not-ai) | 마지막 점검(`humanize-korean`) | `.claude/skills/` 아래 |
+
+   ```bash
+   # 1) fluent-korean — output style 파일 둘(fluent-korean · fluent-korean-not-coding)
+   rm -rf /tmp/fluent-korean && git clone --quiet --depth 1 https://github.com/snflkd/fluent-korean /tmp/fluent-korean
+   mkdir -p .claude/output-styles && cp /tmp/fluent-korean/plugins/fluent-korean/output-styles/*.md .claude/output-styles/
+
+   # 2) korean — skill 폴더째(.git 은 빼야 커밋된다)
+   rm -rf .claude/skills/korean && git clone --quiet --depth 1 https://github.com/airoasting/korean .claude/skills/korean
+   rm -rf .claude/skills/korean/.git
+
+   # 3) im-not-ai — 받아서 skill 폴더를 .claude/skills/ 로 옮긴다
+   rm -rf /tmp/im-not-ai && git clone --quiet --depth 1 https://github.com/epoko77-ai/im-not-ai /tmp/im-not-ai
+   ```
+
+   - 3) 은 그 저장소의 안내가 플러그인(`/plugin install humanize-korean@im-not-ai`)과 전역 설치 스크립트 기준이라,
+     저장소 단위로 넣는 경로는 **받은 폴더의 구조와 README 를 보고** 정한다(skill 과 그것이 부르는 에이전트 정의를 함께 옮긴다).
+     옮긴 뒤 새 세션에서 그 skill 이 실제로 불리는지 한 번 확인한다.
+   - `.claude/settings.overlay.json` 에 `"outputStyle": "fluent-korean"` 을 넣고 `node .claude/ops/bin/claude-ops.js settings`
+     (코드를 고치지 않는 저장소면 `fluent-korean-not-coding`). 새 세션이나 `/clear` 뒤부터 적용된다.
+   - 놓은 경로 셋을 `CLAUDE.md` 의 「에이전트 작업 규약」 절에 적는다 — 작업 에이전트는 그 줄을 보고 기준 파일을 찾는다.
+   - 셋 다 MIT 다. 각 폴더의 LICENSE 를 지우지 않는다. 받은 커밋(또는 판)을 커밋 메시지에 적어 두면 나중에 올릴 때 편하다.
+   - 로컬에서만 쓰는 사람은 각 저장소의 안내대로 플러그인으로 설치해도 된다 — 다만 그것만으로는 클라우드 세션에 보이지 않는다.
 
 ## 5. 확인
 
@@ -156,6 +192,7 @@ GitHub 저장소 → **Settings → Actions → General → Workflow permissions
 | `settings.json — base + overlay 병합 결과와 다르다` | `settings.json` 을 직접 고친 것이다. `.claude/settings.overlay.json` 으로 옮기고 `node .claude/ops/bin/claude-ops.js settings` |
 | init/sync 가 `이미 있고 … 병합 결과와 다르다` 로 멈춤 | 2번(기존 설정을 오버레이로)을 하고 다시. 바뀌는 것을 확인했으면 `--adopt-settings` |
 | `템플릿을 받지 못했다` | 주소(`TEMPLATE_URL`, `.claude/ops.lock` 의 `source.url`)와 네트워크 확인. 템플릿이 비공개면 `CLAUDE_OPS_TOKEN` 환경변수 |
+| 보고서에 한국어 라이브러리 「안 했음」 이 계속 적힌다 | 셋이 저장소에 커밋돼 있지 않다 — 4절 5번. 플러그인으로만 설치했으면 클라우드 세션에는 없다 |
 | `vX.Y.Z 태그가 없다` | 템플릿에 아직 태그가 없다. `--ref main` 처럼 브랜치를 준다 |
 
 ## 부록 A. Claude 세션에 맡기기
@@ -166,7 +203,7 @@ Claude Code 세션에 아래를 붙이면 1~6번을 대신한다(머지는 사�
 이 저장소에 claude-ops 템플릿을 붙여 줘. 템플릿 주소는 <TEMPLATE_URL>.
 템플릿의 docs/ADOPT.md 절차를 그대로 따르고, 기존 .claude/settings.json 의 서비스 고유 설정은 settings.overlay.json 으로 옮겨서
 병합 결과가 기존과 의미상 같은지 jq 로 확인해. CLAUDE.md 의 서비스 불변식 문장은 의미를 바꾸지 말고 「에이전트 작업 규약」 절만
-붙여. 브랜치 claude/adopt-claude-ops 에 커밋하고 푸시까지만 — PR·머지는 하지 마.
+붙여. 한국어 라이브러리 셋(4절 5번)도 넣고 놓은 경로를 CLAUDE.md 에 적어. 브랜치 claude/adopt-claude-ops 에 커밋하고 푸시까지만 — PR·머지는 하지 마.
 ```
 
 ## 부록 B. 이미 규약 복사본(템플릿 이전 방식)이 있는 저장소
