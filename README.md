@@ -9,6 +9,10 @@
 
 - **규약** — 침묵하는 누락을 막는 3층: L1(기계 검사 — pre/postflight) · L2(보고서에 답이 있어야 하는 여섯 질문) ·
   L3(지휘자 규약 — 브리프·검증 배치·변이·모델 고르기·사용량 한도)
+- **한국어 산출물 규칙** — 한국어가 들어가는 모든 것은 세 라이브러리를 반드시 거친다: 쓰는 동안
+  [fluent-korean](https://github.com/snflkd/fluent-korean), 쓴 뒤 [korean](https://github.com/airoasting/korean)(윤문) →
+  [im-not-ai](https://github.com/epoko77-ai/im-not-ai)(마지막 점검). 라이브러리는 싣지 않는다 — 서비스가 오버레이로 넣는다
+  ([`docs/ADOPT.md`](docs/ADOPT.md) 4절)
 - **에이전트 정의** — 구현자 · 적대적 검증자(편집 도구 없음) · 탐색자(읽기 전용) · 테스트 실행자(실패 요약만)
 - **도구** — `claude-ops`(동기화·검사) · `preflight.sh` · `postflight.sh` · `run-quiet.sh`(요약만 출력·종료 코드 보존) ·
   `usage-guard.py`(계정 사용량으로 동시성 판단 훅) · `tokens.py`(토큰 실측)
@@ -45,7 +49,7 @@
 TEMPLATE_URL=https://github.com/<계정>/claude-ops-template.git
 rm -rf /tmp/claude-ops-template && git clone --quiet --depth 1 "$TEMPLATE_URL" /tmp/claude-ops-template
 node /tmp/claude-ops-template/bin/claude-ops.js init --source "$TEMPLATE_URL" --ref latest
-# → .claude/project.env · CLAUDE.md 채우기 → check → 커밋
+# → .claude/project.env · CLAUDE.md 채우기 · 한국어 라이브러리 셋 넣기 → check → 커밋
 ```
 
 ## 업데이트

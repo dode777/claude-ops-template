@@ -2,6 +2,20 @@
 
 형식: 버전마다 「무엇이 바뀌었나 / 소비자가 할 일」. 버전 규칙은 `docs/DESIGN.md` 5절.
 
+## 1.1.0 — 한국어 산출물은 세 라이브러리를 반드시 거친다
+
+- 규약에 「한국어 산출물」 절을 더했다(`.claude/ops/docs/CONVENTIONS.md`). 한국어가 들어가는 모든 것(화면 문구·문서·주석·
+  커밋 메시지·PR 본문·브리프·보고서)은 순서대로 셋을 거친다: 쓰는 동안 `fluent-korean`(snflkd/fluent-korean), 쓴 뒤
+  `korean`(airoasting/korean — 윤문) → `humanize-korean`(epoko77-ai/im-not-ai — 마지막 점검). 뜻·수치·고유명사·인용·코드·
+  식별자는 바꾸지 않는다. 라이브러리가 없어 못 거쳤으면 보고서에 "안 했음 + 이유".
+- 같은 규칙을 각 자리에 넣었다: 보고서 틀(새 절 「한국어 산출물」) · 브리프 틀(한 줄 + 체크리스트 둘) · `ops-implementer` ·
+  `ops-adversarial-verifier`(보고서와 실제 문장을 대조) · `ops-orchestrator` skill(L3-13).
+- `init/CLAUDE.md` · `docs/ADOPT.md` 4절 — 세 라이브러리를 저장소에 커밋된 파일로 넣는 법, `outputStyle` 설정.
+- 기계 검사는 더하지 않았다 — postflight 는 새 절을 보지 않으므로 **기존 보고서는 그대로 통과한다**.
+- 라이브러리 자체는 템플릿에 싣지 않는다(남의 저장소, 오버레이로 설치).
+- 소비자가 할 일: `sync --ref v1.1.0` 뒤에 ① 세 라이브러리를 저장소에 넣고(`docs/ADOPT.md` 4절 5번) ② `CLAUDE.md` 의
+  「에이전트 작업 규약」 절에 한국어 줄을 더한다(같은 절에 문구가 있다 — CLAUDE.md 는 소비자 소유라 sync 가 고치지 않는다).
+
 ## 1.0.1 — 동기화 워크플로의 기본을 수동 실행으로
 
 - `init/.github/workflows/claude-ops-sync.yml` — 주 1회 `schedule:` 을 빼고 **수동 실행(workflow_dispatch)만**을 기본으로 했다.
