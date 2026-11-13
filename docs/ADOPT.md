@@ -126,13 +126,17 @@ node /tmp/claude-ops-template/bin/claude-ops.js init --source "$TEMPLATE_URL" --
    rm -rf .claude/skills/korean && git clone --quiet --depth 1 https://github.com/airoasting/korean .claude/skills/korean
    rm -rf .claude/skills/korean/.git
 
-   # 3) im-not-ai — 받아서 skill 폴더를 .claude/skills/ 로 옮긴다
+   # 3) im-not-ai — skill 넷(humanize-korean · humanize · humanize-redo · humanize-scan)과 그것이 부르는 에이전트 정의
    rm -rf /tmp/im-not-ai && git clone --quiet --depth 1 https://github.com/epoko77-ai/im-not-ai /tmp/im-not-ai
+   mkdir -p .claude/skills .claude/agents
+   cp -R /tmp/im-not-ai/skills/humanize* .claude/skills/ && cp /tmp/im-not-ai/agents/*.md .claude/agents/
+   cp /tmp/im-not-ai/LICENSE .claude/skills/humanize-korean/LICENSE
    ```
 
-   - 3) 은 그 저장소의 안내가 플러그인(`/plugin install humanize-korean@im-not-ai`)과 전역 설치 스크립트 기준이라,
-     저장소 단위로 넣는 경로는 **받은 폴더의 구조와 README 를 보고** 정한다(skill 과 그것이 부르는 에이전트 정의를 함께 옮긴다).
-     옮긴 뒤 새 세션에서 그 skill 이 실제로 불리는지 한 번 확인한다.
+   - 3) 은 그 저장소가 안내하는 방식(플러그인 · 전역 설치 스크립트)이 아니라 파일을 직접 옮기는 것이다. 옮긴 뒤 새 세션에서
+     `humanize-korean` 이 실제로 불리는지 한 번 확인한다.
+   - 이 단계를 건너뛰어도 규약은 동작한다 — 에이전트가 작업 때마다 세 저장소를 임시로 받아서 쓴다(규약 「라이브러리가
+     없으면」). 다만 매번 네트워크가 필요하고 받는 판이 고정되지 않으므로, 저장소에 넣어 두는 쪽을 권한다.
    - `.claude/settings.overlay.json` 에 `"outputStyle": "fluent-korean"` 을 넣고 `node .claude/ops/bin/claude-ops.js settings`
      (코드를 고치지 않는 저장소면 `fluent-korean-not-coding`). 새 세션이나 `/clear` 뒤부터 적용된다.
    - 놓은 경로 셋을 `CLAUDE.md` 의 「에이전트 작업 규약」 절에 적는다 — 작업 에이전트는 그 줄을 보고 기준 파일을 찾는다.
