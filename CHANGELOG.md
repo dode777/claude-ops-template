@@ -2,6 +2,19 @@
 
 형식: 버전마다 「무엇이 바뀌었나 / 소비자가 할 일」. 버전 규칙은 `docs/DESIGN.md` 5절.
 
+## 1.2.0 — 모델 방침: 기본 Opus 5.5 · 내려도 Sonnet 까지 · Haiku 는 쓰지 않는다 · Fable 은 요청받았을 때만
+
+- 에이전트 정의의 모델 — `ops-implementer` · `ops-adversarial-verifier` 는 `inherit` → `claude-opus-5-5`,
+  `ops-explorer` · `ops-test-runner` 는 `haiku` → `sonnet`. 지휘 세션이 어떤 모델이든 에이전트는 이 기본값으로 뜬다.
+- `ops-orchestrator` skill — L3-12 와 「모델 고르기」 를 새 방침으로 다시 썼다. Fable 은 지휘자가 스스로 고르지 않고
+  계정 소유자가 요청한 작업에만 쓴다(예전의 「여유 60% 미만 + 필요」 기준은 없앴다). 정의 없이 띄우는 일반 에이전트는
+  지휘 세션의 모델을 물려받으므로 `model` 인자를 주게 했다. Opus 가 주간 한도로 막히면 Sonnet 으로만 내린다.
+- `usage-guard.py` — 「사용 금지 모델」 안내 문구를 같은 방침으로 고쳤다(판정 기준은 그대로).
+- `init/project.env` — 공동 작성자 줄의 기본값을 `Claude Opus 5.5` 로. `init/orchestrator.local.md` — 「여유」 기준 줄을 바꿨다.
+- 기계 검사는 바꾸지 않았다 — 트레일러 모양 검사는 여전히 Haiku 이름도 받는다(기존 브랜치가 그대로 통과한다).
+- 소비자가 할 일: **없다**(`sync --ref v1.2.0`). 이미 만든 `project.env` 의 기본 트레일러를 `Claude Opus 5.5` 로 맞추는 것은 선택이다.
+  `.claude/orchestrator.local.md` 에 Fable 「여유」 기준을 따로 적어 둔 서비스는 그 줄을 지운다 — 이제 쓰이지 않는다.
+
 ## 1.1.1 — 한국어 라이브러리가 없으면 받아서 쓴다
 
 - 규약 「한국어 산출물」 에 「라이브러리가 없으면 — 받아서 쓴다」 를 더했다. 1.1.0 은 넣는 법을 템플릿의 `docs/ADOPT.md` 에만

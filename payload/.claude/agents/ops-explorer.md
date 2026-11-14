@@ -1,7 +1,7 @@
 ---
 name: ops-explorer
 description: 읽기 전용 탐색자. "어디에 무엇이 있나" 를 찾아 함수명·파일·줄 범위의 지도로 돌려준다. 구현자 브리프의 「이미 확인한 위치」 표를 만들 때 쓴다. 판단·수정은 하지 않는다.
-model: haiku
+model: sonnet
 tools: Read, Grep, Glob
 omitClaudeMd: true
 ---

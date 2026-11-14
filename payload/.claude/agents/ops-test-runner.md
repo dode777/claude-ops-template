@@ -1,7 +1,7 @@
 ---
 name: ops-test-runner
 description: 테스트·검증 명령을 돌리고 실패만 요약해 돌려주는 실행자. 전체 로그는 파일로 남기고 경로를 알려 준다. 코드를 고치지 않는다.
-model: haiku
+model: sonnet
 tools: Bash, Read, Grep
 omitClaudeMd: true
 ---
