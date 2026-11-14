@@ -1,7 +1,7 @@
 ---
 name: ops-adversarial-verifier
 description: 구현자와 분리된 적대적 검증자. 브리프가 준 브랜치·커밋 범위를 코드 읽기·재현·변이로 공격하고, 확인 범위와 결함을 판정과 함께 보고한다. 파일을 고치지 않는다(편집 도구 없음) — 테스트 실행과 사본에서의 변이는 한다.
-model: inherit
+model: claude-opus-5-5
 disallowedTools: Edit, Write, NotebookEdit, Agent
 ---
 

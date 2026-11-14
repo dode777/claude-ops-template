@@ -149,12 +149,12 @@ def main():
         notice = f'{worst_label} {worst_pct:.0f}% — 감속 권고'
     if blocked:
         verdict += (f' / 사용 금지 모델: {", ".join(blocked)} (한정 한도 초과) — '
-                    'Agent 도구의 model 인자로 다른 모델을 지정할 것.')
+                    'Opus 가 막혔으면 Agent 도구의 model 인자로 sonnet 을 지정할 것(Haiku 는 쓰지 않는다 · Fable 은 소유자 요청 때만).')
         if sev == 'normal':
             sev = 'warning'
             notice = f'{", ".join(blocked)} 한도 초과 — 다른 모델로 작업'
     if tight:
-        verdict += f' / 한도 임박 모델: {", ".join(tight)} — 가능하면 다른 모델로.'
+        verdict += f' / 한도 임박 모델: {", ".join(tight)} — 가능하면 Opus·Sonnet 중 다른 쪽으로.'
 
     lines = [f'[사용량 {src}] ' + summary,
              '  ' + ' | '.join(f'{l} 리셋 {kst(r)}' for l, _, r, _ in rows),
